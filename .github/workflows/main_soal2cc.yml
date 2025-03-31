@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - soal2CC
+name: Build and Deploy Python App to Azure Web App - soal2CC
 
 on:
   push:
@@ -20,15 +20,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List all files for debugging
+      - name: Debugging - List all files
         run: ls -R
 
-      - name: Set up Python version
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Create and start virtual environment
+      - name: Create and Activate Virtual Environment
         run: |
           python -m venv venv
           source venv/bin/activate
@@ -38,14 +38,14 @@ jobs:
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           else
-            echo "Error: requirements.txt not found!"
+            echo "❌ Error: requirements.txt not found!"
             exit 1
           fi
 
-      - name: Zip artifact for deployment
+      - name: Prepare Artifact for Deployment
         run: zip -r release.zip . -x "venv/*"
 
-      - name: Upload artifact for deployment jobs
+      - name: Upload Artifact for Deployment
         uses: actions/upload-artifact@v4
         with:
           name: python-app
@@ -62,12 +62,12 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download Artifact from Build
         uses: actions/download-artifact@v4
         with:
           name: python-app
 
-      - name: Unzip artifact for deployment
+      - name: Extract Artifact
         run: unzip release.zip
 
       - name: Login to Azure
