@@ -1,9 +1,9 @@
 from flask import Flask, request, render_template_string
-import pyodbc # type: ignore
+import pyodbc  # type: ignore
 
 app = Flask(__name__)
 
-# 🔹 Konfigurasi Koneksi ke Database (Sudah diperbarui)
+# 🔹 Konfigurasi Koneksi ke Database
 DB_CONFIG = {
     'DRIVER': '{ODBC Driver 18 for SQL Server}',
     'SERVER': 'tcp:praktik2db.database.windows.net,1433',
@@ -15,7 +15,7 @@ DB_CONFIG = {
     'TIMEOUT': 30
 }
 
-# 🔹 Fungsi untuk Membuka Koneksi Database
+# 🔹 Fungsi untuk Membuka Koneksi Database dengan Debugging
 def get_db_connection():
     try:
         conn_str = (
@@ -29,9 +29,10 @@ def get_db_connection():
             f"Connection Timeout={DB_CONFIG['TIMEOUT']};"
         )
         conn = pyodbc.connect(conn_str)
+        print("✅ Database connection successful!")  # Debugging
         return conn
     except Exception as e:
-        print(f"Database connection error: {e}")
+        print(f"❌ Database connection error: {e}")
         return None
 
 # 🔹 Halaman Home
@@ -50,7 +51,6 @@ def home():
         <div class="text-center">
             <h1 class="display-4 mb-4">Hello, World! 🌍</h1>
             <a href="/form" class="btn btn-lg btn-success">Isi Form Sekarang</a>
-            <a href="/users" class="btn btn-lg btn-primary">Lihat Data</a>
         </div>
     </body>
     </html>
@@ -63,6 +63,8 @@ def form():
         name = request.form["name"]
         email = request.form["email"]
 
+        print(f"📩 Received input - Name: {name}, Email: {email}")  # Debugging Input
+
         # 🔹 Simpan Data ke Database
         conn = get_db_connection()
         if conn:
@@ -70,13 +72,40 @@ def form():
             try:
                 cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
                 conn.commit()
+                print("✅ Database commit successful!")  # Debugging Commit
+
+                # 🔹 Cek apakah data benar-benar masuk ke database
+                cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+                row = cursor.fetchone()
+                if row:
+                    print("✅ Data successfully inserted:", row)
+                else:
+                    print("❌ Data not found after insert!")
+
             except Exception as e:
-                print(f"Error saat menyimpan ke database: {e}")
+                print(f"❌ Error saat menyimpan ke database: {e}")
             finally:
                 cursor.close()
                 conn.close()
 
-        return f"<h2>Halo {name}!</h2><p>Email Anda <strong>{email}</strong> telah diterima 🎉</p><a href='/'>Kembali</a>"
+        return render_template_string('''
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Result</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            </head>
+            <body class="bg-light d-flex justify-content-center align-items-center" style="height: 100vh;">
+                <div class="text-center">
+                    <h2 class="mb-3">Halo {{ name }}!</h2>
+                    <p>Email Anda <strong>{{ email }}</strong> telah diterima 🎉</p>
+                    <a href="/" class="btn btn-secondary mt-3">Kembali ke Home</a>
+                </div>
+            </body>
+            </html>
+        ''', name=name, email=email)
     
     return '''
     <!DOCTYPE html>
@@ -105,24 +134,6 @@ def form():
     </body>
     </html>
     '''
-
-# 🔹 Halaman untuk Menampilkan Data Users
-@app.route("/users")
-def show_users():
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, email FROM users")
-        users = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
-        user_list = "<h2>Daftar Users</h2><ul>"
-        for user in users:
-            user_list += f"<li>ID: {user[0]}, Nama: {user[1]}, Email: {user[2]}</li>"
-        user_list += "</ul><a href='/'>Kembali</a>"
-        return user_list
-    return "Gagal mengambil data dari database"
 
 # 🔹 Jalankan Aplikasi Flask
 if __name__ == "__main__":
