@@ -9,13 +9,13 @@ DB_CONFIG = {
     'SERVER': 'tcp:praktik2db.database.windows.net,1433',
     'DATABASE': 'praktik2db',
     'USERNAME': 'Aliyah',
-    'PASSWORD': 'your_password_here',  # Ganti dengan password asli
+    'PASSWORD': 'your_password_here',  # 🔒 Ganti dengan password asli
     'ENCRYPT': 'yes',
     'TRUST_SERVER_CERTIFICATE': 'no',
     'TIMEOUT': 30
 }
 
-# 🔹 Fungsi untuk Membuka Koneksi Database dengan Debugging
+# 🔹 Fungsi untuk Membuka Koneksi Database
 def get_db_connection():
     try:
         conn_str = (
@@ -29,7 +29,7 @@ def get_db_connection():
             f"Connection Timeout={DB_CONFIG['TIMEOUT']};"
         )
         conn = pyodbc.connect(conn_str)
-        print("✅ Database connection successful!")  # Debugging
+        print("✅ Database connection successful!")
         return conn
     except Exception as e:
         print(f"❌ Database connection error: {e}")
@@ -63,7 +63,7 @@ def form():
         name = request.form["name"]
         email = request.form["email"]
 
-        print(f"📩 Received input - Name: {name}, Email: {email}")  # Debugging Input
+        print(f"📩 Received input - Name: {name}, Email: {email}")
 
         # 🔹 Simpan Data ke Database
         conn = get_db_connection()
@@ -72,9 +72,9 @@ def form():
             try:
                 cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
                 conn.commit()
-                print("✅ Database commit successful!")  # Debugging Commit
+                print("✅ Database commit successful!")
 
-                # 🔹 Cek apakah data benar-benar masuk ke database
+                # 🔹 Validasi apakah data benar-benar masuk
                 cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
                 row = cursor.fetchone()
                 if row:
@@ -106,7 +106,7 @@ def form():
             </body>
             </html>
         ''', name=name, email=email)
-    
+
     return '''
     <!DOCTYPE html>
     <html lang="en">
