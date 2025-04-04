@@ -1,7 +1,40 @@
-from flask import Flask, request, render_template_string # type: ignore
+from flask import Flask, request, render_template_string
+import pyodbc
 
 app = Flask(__name__)
 
+# 🔹 Konfigurasi Koneksi ke Database
+DB_CONFIG = {
+    'DRIVER': '{ODBC Driver 18 for SQL Server}',
+    'SERVER': 'tcp:praktik1.database.windows.net,1433',
+    'DATABASE': 'praktik2',
+    'USERNAME': 'kelompok3',
+    'PASSWORD': 'your_password_here',  # Ganti dengan password asli
+    'ENCRYPT': 'yes',
+    'TRUST_SERVER_CERTIFICATE': 'no',
+    'TIMEOUT': 30
+}
+
+# 🔹 Fungsi untuk Membuka Koneksi Database
+def get_db_connection():
+    try:
+        conn_str = (
+            f"DRIVER={DB_CONFIG['DRIVER']};"
+            f"SERVER={DB_CONFIG['SERVER']};"
+            f"DATABASE={DB_CONFIG['DATABASE']};"
+            f"UID={DB_CONFIG['USERNAME']};"
+            f"PWD={DB_CONFIG['PASSWORD']};"
+            f"Encrypt={DB_CONFIG['ENCRYPT']};"
+            f"TrustServerCertificate={DB_CONFIG['TRUST_SERVER_CERTIFICATE']};"
+            f"Connection Timeout={DB_CONFIG['TIMEOUT']};"
+        )
+        conn = pyodbc.connect(conn_str)
+        return conn
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        return None
+
+# 🔹 Halaman Home
 @app.route("/")
 def home():
     return '''
@@ -22,11 +55,26 @@ def home():
     </html>
     '''
 
+# 🔹 Halaman Form Input
 @app.route("/form", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
+
+        # 🔹 Simpan Data ke Database
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
+                conn.commit()
+            except Exception as e:
+                print(f"Error saat menyimpan ke database: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+
         return render_template_string('''
             <!DOCTYPE html>
             <html lang="en">
@@ -74,5 +122,6 @@ def form():
     </html>
     '''
 
+# 🔹 Jalankan Aplikasi Flask
 if __name__ == "__main__":
     app.run(debug=True)
