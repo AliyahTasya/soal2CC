@@ -9,7 +9,7 @@ DB_CONFIG = {
     'SERVER': 'tcp:praktik2db.database.windows.net,1433',
     'DATABASE': 'praktik2db',
     'USERNAME': 'Aliyah',
-    'PASSWORD': 'your_password_here',  # 🔒 Ganti dengan password asli
+    'PASSWORD': 'AzureSQL_1234',  # 🔒 Ganti dengan password asli
     'ENCRYPT': 'yes',
     'TRUST_SERVER_CERTIFICATE': 'no',
     'TIMEOUT': 30
