@@ -9,7 +9,7 @@ DB_CONFIG = {
     'SERVER': 'tcp:praktik2db.database.windows.net,1433',
     'DATABASE': 'praktik2db',
     'USERNAME': 'Aliyah',
-    'PASSWORD': 'AzureSQL_1234',  # 🔒 Ganti dengan password asli
+    'PASSWORD': 'AzureSQL_1234',  
     'ENCRYPT': 'yes',
     'TRUST_SERVER_CERTIFICATE': 'no',
     'TIMEOUT': 30
@@ -50,7 +50,8 @@ def home():
     <body class="bg-light d-flex justify-content-center align-items-center" style="height: 100vh;">
         <div class="text-center">
             <h1 class="display-4 mb-4">Hello, World! 🌍</h1>
-            <a href="/form" class="btn btn-lg btn-success">Isi Form Sekarang</a>
+            <a href="/form" class="btn btn-lg btn-success me-2">Isi Form Sekarang</a>
+            <a href="/data" class="btn btn-lg btn-primary">Lihat Data</a>
         </div>
     </body>
     </html>
@@ -134,6 +135,61 @@ def form():
     </body>
     </html>
     '''
+
+# 🔹 Halaman untuk Melihat Data dari Database
+@app.route("/data")
+def view_data():
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id, name, email FROM users")
+            rows = cursor.fetchall()
+        except Exception as e:
+            return f"<h3>❌ Gagal mengambil data: {e}</h3>"
+        finally:
+            cursor.close()
+            conn.close()
+        
+        # Render data dengan HTML tabel
+        table_html = '''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Data Pengguna</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light p-4">
+            <div class="container">
+                <h2 class="mb-4">📄 Data Pengguna</h2>
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        '''
+
+        for row in rows:
+            table_html += f"<tr><td>{row.id}</td><td>{row.name}</td><td>{row.email}</td></tr>"
+
+        table_html += '''
+                    </tbody>
+                </table>
+                <a href="/" class="btn btn-secondary mt-3">Kembali ke Home</a>
+            </div>
+        </body>
+        </html>
+        '''
+
+        return table_html
+
+    return "<h3>❌ Tidak dapat terhubung ke database!</h3>"
 
 # 🔹 Jalankan Aplikasi Flask
 if __name__ == "__main__":
